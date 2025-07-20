@@ -1,0 +1,33 @@
+from rembg import remove
+import cv2
+import numpy as np
+
+# Load the image
+input_path = 'birds.png'  # your input file
+output_path = 'output.png'
+
+# Step 1: Remove background
+with open(input_path, 'rb') as i:
+    input_data = i.read()
+output_data = remove(input_data)
+
+# Save the image with transparent background
+with open('no_bg.png', 'wb') as o:
+    o.write(output_data)
+
+# Step 2: Convert transparent background to white
+img = cv2.imread('no_bg.png', cv2.IMREAD_UNCHANGED)
+
+# If image has alpha channel
+if img.shape[2] == 4:
+    alpha_channel = img[:, :, 3]
+    rgb_channels = img[:, :, :3]
+
+    # Create white background
+    white_bg = np.ones_like(rgb_channels, dtype=np.uint8) * 255
+    alpha_factor = alpha_channel[:, :, np.newaxis] / 255.0
+
+    final_img = rgb_channels * alpha_factor + white_bg * (1 - alpha_factor)
+    final_img = final_img.astype(np.uint8)
+
+    cv2.imwrite(output_path, final_img)
